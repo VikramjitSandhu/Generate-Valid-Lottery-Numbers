@@ -1,0 +1,67 @@
+Summary of approach:
+--------------------
+use Depth First Search (DFS) to create a decision tree. Prune away branches of the tree based on requirements for a valid lottery number. 
+
+Time complexity: 
+-----------------
+Maximum depth(height) of binary (please see detailed explanation of why it is binary) decision tree is 7 so time complexity is O(2^7)
+
+IMPORTANT PLEASE READ:
+---------------------
+Please note that this program will only print an output if an input string can yield a lottery combination as per the requirements i.e.
+
+No number less than 1 or greater than 59 (0s will NOT be printed but 0 prefixed numbers are stripped of their leading zeros)
+Every number is unique
+A combination has EXACTLY 7 numbers
+
+for input like 12304567, the following combos are IGNORED (as at least 1 number is 0):
+[1 2 3 0 4 56 7, 1 2 3 0 45 6 7, 1 2 3 04 5 6 7, 1 23 0 4 5 6 7, 12 3 0 4 5 6 7]
+
+the following combos are considered valid:
+[1 2 3 4 5 6 7, 1 2 30 4 5 6 7]
+Please notice that 04 has been included as 4 i.e. the program will strip away leading zeros
+
+
+For an input like 10230405617, 
+a combination like [10 23 40 56 1 7] is rejected because it has only 6 numbers
+a combination like [1 23 4 5 6 1 7] is rejected as the number 1 repeats itself
+
+Detailed Analysis (my though process):
+--------------------------------------
+I started of with the simpler case (no zeros in input string) and then moved to string with zeros thrown in
+
+CASE1: split a given input string with no zeros
+
+Each number in the lottery combination can be either 1 or 2 digits long (as each  number > 1 and <= 59). Therefore, in the beginning, we could split either 1 or 2 characters from the input string. The thing is, either or both decisions i.e. choosing 1 or 2 characters from the input string may result in a valid lottery combination OR both decisions may not result in a valid combination. 
+
+Since we don't know before hand if the input string should be split into 1 or 2 digit combos or both (since choosing either decision may lead to the remaining string returning an invalid combination), at each step (of the remaining string), we need to try to break 1 and 2 characters. This lends the problem to breaking into a binary tree like structure where each node is the string remaining after chopping of 1 or 2 characters previously and each node further has two children.
+
+e.g. if the input string was 123456789:
+
+At level 0 of the tree:
+123456789 -> 1 and 23456789
+123456789 -> 12 and 3456789
+
+At level 1 of the tree:
+23456789-> 2 and 3456789
+23456789-> 23 and 456789
+
+3456789-> 3 and 456789
+3456789-> 34 and 56789
+
+and so on.
+
+A potentially valid combination can be obtained by traversing a path of the tree and gathering the substrings (each 1 or 2 characters long) till a leaf node is reached. However, various conditions imposed on the lottery numbers will prune away some branches.
+
+So given the original input string, the function generating the lottery combinations must return a list of strings, each with at least 7 numbers. Following the aforementioned DFS approach, the first call of the function first breaks 1 and then 2 characters from the input string. For each of the 2 decisions, it recursively calls itself with the remaining string and a requirement to have 1 less number in the lottery combination as compared to the parent/calling function. The recursion bottoms out when the input string is empty or has just 1 character. Also, since the maximum number of digits in the lottery combination is 7, the MAXIMUM recursion depth of the tree will be 7.
+
+
+CASE2: input string has one ope more zeros
+The presence of 0 in the input string means that we cannot outright reject any string with greater than 14 characters since by skipping the zeros, we may potentially still get a lottery combination with 7 numbers. For this, initially, the number of branches at each depth of the recursion tree may be greater than 2, but because each number in the lottery combination is between 1 and 59 (inclusive), all but two of the branches will be pruned right away, resulting in only 2 children which may potentially return a valid combination
+
+
+SCOPE FOR IMPROVEMENT:
+The recursive nature of this program can be thought of as having states namely  the starting index in the string and the remaining numbers that need to be added to the list. This leads to some repeated calculations e.g.
+for input string 12345678, one possible path in the DFS is 1->23-> and another is 12->3->
+In both cases 2 numbers have been added and the next call of the function is supposed to return 5 valid numbers starting at index 3. This lends itself to MEMOIZATION which is NOT implemented in this program as I figured the recursion depth is always limited to 7 so I won't gain much of an improvement.
+
